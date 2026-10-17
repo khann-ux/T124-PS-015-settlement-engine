@@ -1,0 +1,9 @@
+merchant_id,business_name,mcc,risk_grade,mdr_plan,negotiated_rate,gstin,account_num,ifsc,bank_name,account_holder
+M001,Apex Retail Supermarket,5411,LOW,STANDARD,,27AAACA1234A1Z5,91001002345678,HDFC0000128,HDFC Bank,Apex Retail Pvt Ltd
+M002,Nova Electronics Store,5732,LOW,FLAT_PLAN,,29AABCN5678B1Z2,02450500123456,ICIC0000245,ICICI Bank,Nova Electronics LLP
+M003,CloudNine Travel & Hotels,4722,MEDIUM,STANDARD,,07AAACC9988D1Z9,30987654321012,SBIN0001456,State Bank of India,CloudNine Travel Corp
+M004,Saffron Artisans & Crafts,5947,MEDIUM,NEGOTIATED,0.0120,,11223344556677,KKBK0000890,Kotak Mahindra Bank,Saffron Handloom
+M005,Vanguard Crypto & Gaming,7995,HIGH,STANDARD,,33AAACV4455E1Z8,50100234567890,HDFC0000501,HDFC Bank,Vanguard Gaming Tech
+M006,Global Forex & Escrow,6051,HIGH,FLAT_PLAN,,,60123456789012,UTIB0000601,Axis Bank,Global Forex Services
+M007,MicroBite Chai & Snacks,5814,LOW,STANDARD,,27AAACM1122F1Z1,70123456789012,PUNB0000701,Punjab National Bank,MicroBite Express
+M008,UrbanStyle Fashion Boutique,5651,LOW,STANDARD,,27AAACU3344G1Z3,80123456789012,BARB0000801,Bank of Baroda,UrbanStyle Fashion
