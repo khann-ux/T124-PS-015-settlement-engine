@@ -1,8 +1,3 @@
-"""
-Master CLI Entrypoint for Payment Aggregator Settlement Engine (PS-015).
-Runs simulation over input data files and generates daily payouts, MDR reports, and invoices.
-"""
-
 import argparse
 import sys
 from datetime import datetime
@@ -53,8 +48,7 @@ def main():
 
     print(f"\n[5/5] Generating Monthly Invoices for Billing Period {args.invoice_year}-{args.invoice_month:02d}...")
     cli.export_invoices(args.invoice_year, args.invoice_month)
-    
-    # Export transaction MDR and rejection logs
+
     mdr_file = cli.export_mdr_transactions()
     rej_file = cli.export_rejections()
 

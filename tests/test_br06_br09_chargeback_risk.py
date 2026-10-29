@@ -1,7 +1,3 @@
-"""
-Test Suite for BR-06 (Chargebacks, Representments) and BR-09 (Dynamic Risk Grading).
-"""
-
 import pytest
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -35,7 +31,6 @@ class TestBR06AndBR09ChargebackRisk:
             state=TransactionState.CAPTURED,
         )
 
-        # 1. File Chargeback
         ev_cb = LifecycleEvent(
             event_id="EV-CB-1",
             txn_id=txn.txn_id,
@@ -50,7 +45,6 @@ class TestBR06AndBR09ChargebackRisk:
         assert q_cb.total_debit == Decimal("3250.00")
         assert txn.state == TransactionState.CHARGEBACK_FILED
 
-        # 2. Representment Won
         ev_rep_won = LifecycleEvent(
             event_id="EV-REP-1",
             txn_id=txn.txn_id,
@@ -100,11 +94,9 @@ class TestBR06AndBR09ChargebackRisk:
         assert rep_credit is None, "No credit should be returned when representment is lost"
 
     def test_dynamic_downgrade_and_60_days_clean_recovery(self, low_risk_merchant):
-        # Starts at LOW
         assert low_risk_merchant.current_risk_grade == RiskGrade.LOW
 
         as_of = date(2026, 9, 20)
-        # 10 captures and 1 chargeback in trailing 30 days -> 10% ratio > 1.00%
         captures = [
             Transaction(
                 txn_id=f"T-{i}",
@@ -129,17 +121,13 @@ class TestBR06AndBR09ChargebackRisk:
             )
         ]
 
-        # Trigger evaluation -> Downgrade LOW -> MEDIUM
         ChargebackEngine.evaluate_risk_grade(low_risk_merchant, as_of, captures, chargebacks)
         assert low_risk_merchant.current_risk_grade == RiskGrade.MEDIUM
         assert low_risk_merchant.consecutive_clean_days == 0
 
-        # Simulate 60 clean days with zero chargebacks
         curr_date = as_of
         for _ in range(60):
             curr_date += timedelta(days=1)
-            # No chargebacks in trailing window now
             ChargebackEngine.evaluate_risk_grade(low_risk_merchant, curr_date, captures, [])
 
-        # After 60 clean days, recovers from MEDIUM back to LOW!
         assert low_risk_merchant.current_risk_grade == RiskGrade.LOW

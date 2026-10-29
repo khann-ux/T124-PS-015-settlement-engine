@@ -1,14 +1,3 @@
-"""
-Monthly MDR & GST Invoicing Generator.
-Complies with BR-10.
-
-BR-10:
-- Generated on the 1st of each month for the preceding calendar month.
-- Per-instrument breakdown: Volume, Gross Volume, MDR, GST (18%), Total Fee.
-- GST Registered Merchants: Itemized GST line, ITC eligible with merchant GSTIN reference.
-- Non-GST Registered Merchants: Invoiced inclusive of GST with NO ITC line and B2C disclaimer.
-"""
-
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -27,11 +16,6 @@ class InvoiceGenerator:
         billing_month: int,
         month_captures: List[Transaction]
     ) -> MonthlyInvoice:
-        """
-        Compiles the monthly invoice for transactions captured in billing_year-billing_month.
-        Invoice date is the 1st of the subsequent month.
-        """
-        # Determine 1st of next month for invoice date
         if billing_month == 12:
             invoice_date = date(billing_year + 1, 1, 1)
         else:
@@ -40,7 +24,6 @@ class InvoiceGenerator:
         billing_period_str = f"{billing_year:04d}-{billing_month:02d}"
         invoice_number = f"INV-{billing_year:04d}{billing_month:02d}-{merchant.merchant_id}"
 
-        # Group by instrument
         instrument_stats: Dict[str, Dict[str, Decimal]] = defaultdict(lambda: {
             "count": Decimal("0"),
             "gross": Decimal("0.00"),
@@ -122,7 +105,6 @@ class InvoiceGenerator:
 
     @staticmethod
     def format_invoice_text(invoice: MonthlyInvoice) -> str:
-        """Renders a formatted text invoice."""
         lines = []
         lines.append("=" * 80)
         lines.append(f"TAX INVOICE: {invoice.invoice_number}")

@@ -1,8 +1,3 @@
-"""
-End-to-End System Simulation Test for PS-015 Engine.
-Tests full pipeline across 45 calendar days with 1,000+ lifecycle events.
-"""
-
 import os
 import shutil
 import pytest
@@ -27,7 +22,6 @@ class TestEndToEndSimulation:
 
         cli = SettlementCLI(output_dir=test_output_dir)
 
-        # 1. Ingest
         n_merchants = cli.load_merchants(merchants_path)
         assert n_merchants == 8, "Must load 8 merchants"
 
@@ -37,18 +31,15 @@ class TestEndToEndSimulation:
         n_events = cli.load_and_process_events(events_path)
         assert n_events >= 300, "Must process 300+ events"
 
-        # 2. Run Daily Settlement Cycles across 45 days
         s_date = date(2026, 9, 1)
         e_date = date(2026, 10, 15)
         days_run = cli.run_settlement_range(s_date, e_date)
         assert days_run == 45, "Must complete 45 daily cycles"
 
-        # 3. Export Artifacts
         mdr_file = cli.export_mdr_transactions()
         rej_file = cli.export_rejections()
         cli.export_invoices(2026, 9)
 
-        # 4. Verify Generated Files
         assert os.path.exists(mdr_file), "MDR audit file must exist"
         assert os.path.exists(rej_file), "Rejections file must exist"
 

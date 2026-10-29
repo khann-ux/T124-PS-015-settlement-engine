@@ -1,7 +1,3 @@
-"""
-Test Suite for BR-05 (Refund Netting, Cumulative Limits, and MDR Retention).
-"""
-
 import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -28,12 +24,11 @@ class TestBR05RefundNetting:
             auth_timestamp=cap_time - timedelta(hours=1),
             captured_amount=Decimal("4000.00"),
             capture_timestamp=cap_time,
-            mdr_amount=Decimal("72.00"),  # 1.8%
-            gst_amount=Decimal("12.96"),  # 18% of 72
+            mdr_amount=Decimal("72.00"),
+            gst_amount=Decimal("12.96"),
             state=TransactionState.CAPTURED,
         )
 
-        # 1st Partial Refund: Rs 1500.00
         ev_ref1 = LifecycleEvent(
             event_id="EV-R1",
             txn_id=txn.txn_id,
@@ -47,7 +42,6 @@ class TestBR05RefundNetting:
         assert txn.refunded_amount == Decimal("1500.00")
         assert txn.remaining_refundable_amount == Decimal("2500.00")
 
-        # 2nd Partial Refund: Rs 2500.00 (exhausts remainder)
         ev_ref2 = LifecycleEvent(
             event_id="EV-R2",
             txn_id=txn.txn_id,
@@ -61,7 +55,6 @@ class TestBR05RefundNetting:
         assert txn.refunded_amount == Decimal("4000.00")
         assert txn.remaining_refundable_amount == Decimal("0.00")
 
-        # 3rd Refund Attempt: Rs 1.00 -> Must be rejected (exceeds balance)
         ev_ref3 = LifecycleEvent(
             event_id="EV-R3",
             txn_id=txn.txn_id,
@@ -75,10 +68,6 @@ class TestBR05RefundNetting:
         assert exc.value.code == "EXCESSIVE_REFUND"
 
     def test_mdr_retention_on_refund(self, low_risk_merchant):
-        """
-        Verify that processing a refund does NOT reduce the original mdr_amount or gst_amount.
-        Payment aggregator retains original fee.
-        """
         cap_time = datetime(2026, 9, 1, 12, 0, 0)
         txn = Transaction(
             txn_id="TXN-MDR-RETAIN",
@@ -98,11 +87,10 @@ class TestBR05RefundNetting:
             txn_id=txn.txn_id,
             merchant_id=txn.merchant_id,
             event_type=EventType.REFUND,
-            amount=Decimal("1000.00"),  # Full refund
+            amount=Decimal("1000.00"),
             timestamp=cap_time + timedelta(days=1),
         )
         RefundEngine.process_refund(txn, ev_ref)
 
-        # Original fees must remain untouched
         assert txn.mdr_amount == Decimal("20.00"), "MDR must be retained on refund"
         assert txn.gst_amount == Decimal("3.60"), "GST must be retained on refund"

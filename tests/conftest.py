@@ -84,7 +84,7 @@ def negotiated_merchant(bank_account):
         base_risk_grade=RiskGrade.LOW,
         current_risk_grade=RiskGrade.LOW,
         mdr_plan=MDRPlan.NEGOTIATED,
-        negotiated_rate=Decimal("0.0120"),  # 1.20%
+        negotiated_rate=Decimal("0.0120"),
         bank_account=bank_account,
         gstin="27AAACE3344E1Z3",
     )
@@ -100,13 +100,13 @@ def unregistered_merchant(bank_account):
         current_risk_grade=RiskGrade.LOW,
         mdr_plan=MDRPlan.STANDARD,
         bank_account=bank_account,
-        gstin=None,  # No GSTIN
+        gstin=None,
     )
 
 
 @pytest.fixture
 def calendar():
     cal = CalendarService()
-    cal.add_holiday(date(2026, 9, 4))   # Janmashtami
-    cal.add_holiday(date(2026, 10, 2))  # Gandhi Jayanti
+    cal.add_holiday(date(2026, 9, 4))
+    cal.add_holiday(date(2026, 10, 2))
     return cal

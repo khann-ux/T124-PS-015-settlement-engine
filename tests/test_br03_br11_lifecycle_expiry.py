@@ -1,7 +1,3 @@
-"""
-Test Suite for BR-03 (Auth Expiry & Partial Capture) and BR-11 (Transaction Lifecycle FSM).
-"""
-
 import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -62,7 +58,7 @@ class TestBR03AndBR11Lifecycle:
             txn_id=txn.txn_id,
             merchant_id=txn.merchant_id,
             event_type=EventType.CAPTURE,
-            amount=Decimal("3500.00"),  # Partial: 3500 < 5000
+            amount=Decimal("3500.00"),
             timestamp=cap_time,
         )
         LifecycleValidator.validate_capture(txn, ev_cap)
@@ -87,7 +83,7 @@ class TestBR03AndBR11Lifecycle:
             txn_id=txn.txn_id,
             merchant_id=txn.merchant_id,
             event_type=EventType.CAPTURE,
-            amount=Decimal("2000.01"),  # Exceeds auth
+            amount=Decimal("2000.01"),
             timestamp=auth_time + timedelta(hours=1),
         )
         with pytest.raises(LifecycleValidationError) as exc:
@@ -102,7 +98,7 @@ class TestBR03AndBR11Lifecycle:
             instrument=PaymentInstrument.UPI,
             authorized_amount=Decimal("1000.00"),
             auth_timestamp=auth_time,
-            state=TransactionState.AUTHORIZED,  # Not captured yet
+            state=TransactionState.AUTHORIZED,
         )
 
         ev_refund = LifecycleEvent(

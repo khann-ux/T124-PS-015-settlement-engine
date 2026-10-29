@@ -1,7 +1,3 @@
-"""
-Test Suite for Placement Viva Stretch Goals: Marketplace Split Settlement & Instant Payouts.
-"""
-
 import pytest
 from datetime import date
 from decimal import Decimal
@@ -14,10 +10,6 @@ from settlement_engine.rules.stretch_goals import (
 class TestStretchGoals:
 
     def test_marketplace_split_settlement(self, low_risk_merchant):
-        # Order amount = Rs 10,000
-        # Platform commission = 10% = Rs 1,000
-        # Vendor pool = Rs 9,000 split between Vendor A (60%) and Vendor B (40%)
-        # Aggregator fee = Rs 180 MDR + Rs 32.40 GST = Rs 212.40 absorbed by platform
         ratios = {
             "VENDOR_A": Decimal("0.60"),
             "VENDOR_B": Decimal("0.40"),
@@ -34,14 +26,12 @@ class TestStretchGoals:
         )
 
         assert result.platform_commission_amount == Decimal("1000.00")
-        assert result.net_platform_revenue == Decimal("1000.00") - Decimal("212.40")  # 787.60
+        assert result.net_platform_revenue == Decimal("1000.00") - Decimal("212.40")
         assert len(result.sub_merchant_splits) == 2
 
-        # Vendor A: 60% of 9000 = 5400
         vendor_a = next(s for s in result.sub_merchant_splits if s.sub_merchant_id == "VENDOR_A")
         assert vendor_a.net_allocated == Decimal("5400.00")
 
-        # Vendor B: 40% of 9000 = 3600
         vendor_b = next(s for s in result.sub_merchant_splits if s.sub_merchant_id == "VENDOR_B")
         assert vendor_b.net_allocated == Decimal("3600.00")
 
@@ -49,7 +39,6 @@ class TestStretchGoals:
         service = InstantSettlementService(default_daily_cap=Decimal("100000.00"))
         req_date = date(2026, 9, 15)
 
-        # 1. Request Rs 50,000 instant payout (0.10% fee = Rs 50.00, GST = Rs 9.00 -> total fee Rs 59.00)
         res1 = service.request_instant_payout(
             merchant=low_risk_merchant,
             request_date=req_date,
@@ -63,7 +52,6 @@ class TestStretchGoals:
         assert res1.disbursed_amount == Decimal("49941.00")
         assert res1.daily_cap_remaining == Decimal("50000.00")
 
-        # 2. Request Rs 60,000 instant payout (exceeds remaining cap of 50,000)
         res2 = service.request_instant_payout(
             merchant=low_risk_merchant,
             request_date=req_date,

@@ -1,10 +1,3 @@
-"""
-Generator script to produce realistic sample data:
-- 8 Merchants (diverse risk grades, plans, GSTINs)
-- Bank Holidays
-- 300+ Lifecycle Events across 45 days (2026-09-01 to 2026-10-15)
-"""
-
 import csv
 import os
 from datetime import datetime, timedelta
@@ -16,7 +9,6 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 def generate_merchants():
     merchants = [
-        # merchant_id,business_name,mcc,risk_grade,mdr_plan,negotiated_rate,gstin,account_num,ifsc,bank_name,account_holder
         ["M001", "Apex Retail Supermarket", "5411", "LOW", "STANDARD", "", "27AAACA1234A1Z5", "91001002345678", "HDFC0000128", "HDFC Bank", "Apex Retail Pvt Ltd"],
         ["M002", "Nova Electronics Store", "5732", "LOW", "FLAT_PLAN", "", "29AABCN5678B1Z2", "02450500123456", "ICIC0000245", "ICICI Bank", "Nova Electronics LLP"],
         ["M003", "CloudNine Travel & Hotels", "4722", "MEDIUM", "STANDARD", "", "07AAACC9988D1Z9", "30987654321012", "SBIN0001456", "State Bank of India", "CloudNine Travel Corp"],
@@ -40,7 +32,6 @@ def generate_merchants():
 
 def generate_holidays():
     holidays = [
-        # 2026 Dates
         ["2026-09-04", "Janmashtami"],
         ["2026-09-16", "Eid-e-Milad"],
         ["2026-10-02", "Mahatma Gandhi Jayanti"],
@@ -55,28 +46,22 @@ def generate_holidays():
 
 
 def generate_events():
-    """Generates 300+ events across 45 days (2026-09-01 to 2026-10-15)."""
     instruments = ["UPI", "DEBIT_CARD", "CREDIT_CARD", "NET_BANKING", "WALLET", "INTERNATIONAL_CARD"]
     start_dt = datetime(2026, 9, 1, 9, 0, 0)
     events = []
     event_idx = 1
     txn_idx = 1000
 
-    # 1. Base transactions distributed across 45 days for all 8 merchants
     for day in range(45):
         current_date = start_dt + timedelta(days=day)
-        
-        # M001 to M006 regular traffic
+
         for m_id in ["M001", "M002", "M003", "M004", "M005", "M006"]:
-            # 2 to 3 transactions per merchant per day
             for tx_num in range(2):
                 txn_idx += 1
                 t_id = f"TXN-{txn_idx}"
                 inst = instruments[(day + tx_num + int(m_id[-1])) % len(instruments)]
-                
-                # Diverse amounts
+
                 if inst == "UPI":
-                    # Alternate between <= 2000 and > 2000
                     amount = Decimal("1500.00") if day % 2 == 0 else Decimal("2000.01")
                 elif inst == "DEBIT_CARD":
                     amount = Decimal("1800.00") if day % 2 == 0 else Decimal("4500.00")
@@ -85,7 +70,6 @@ def generate_events():
                 else:
                     amount = Decimal("3200.00") + Decimal(day * 50)
 
-                # Auth event (morning)
                 auth_time = current_date.replace(hour=10 + (tx_num * 2), minute=15)
                 events.append([
                     f"EV-{event_idx:04d}", t_id, m_id, "AUTH", f"{amount:.2f}",
@@ -93,13 +77,9 @@ def generate_events():
                 ])
                 event_idx += 1
 
-                # Capture event (afternoon)
-                # Test 23:00 cutoff boundary on specific days
                 if day == 5 and tx_num == 0:
-                    # Exactly 23:00:00
                     cap_time = current_date.replace(hour=23, minute=0, second=0)
                 elif day == 5 and tx_num == 1:
-                    # 23:00:01 (after cutoff)
                     cap_time = current_date.replace(hour=23, minute=0, second=1)
                 else:
                     cap_time = current_date.replace(hour=14 + (tx_num * 2), minute=30)
@@ -110,7 +90,6 @@ def generate_events():
                 ])
                 event_idx += 1
 
-                # Occasional partial/full refunds 3 to 5 days later
                 if day in (8, 15, 22, 28) and tx_num == 0:
                     ref_time = cap_time + timedelta(days=3, hours=2)
                     ref_amount = Decimal("500.00")
@@ -120,7 +99,6 @@ def generate_events():
                     ])
                     event_idx += 1
 
-                # Occasional chargebacks on M005 (HIGH risk) and M003
                 if day in (10, 20) and tx_num == 1 and m_id in ("M003", "M005"):
                     cb_time = cap_time + timedelta(days=4)
                     events.append([
@@ -129,7 +107,6 @@ def generate_events():
                     ])
                     event_idx += 1
 
-                    # M003 wins representment 5 days later; M005 loses
                     rep_time = cb_time + timedelta(days=5)
                     rep_won = "true" if m_id == "M003" else "false"
                     events.append([
@@ -138,8 +115,6 @@ def generate_events():
                     ])
                     event_idx += 1
 
-    # 2. Specific Scenario: M007 - Rs 99.99 pending for 30 days
-    # Capture Rs 99.99 on 2026-09-02 (Day 1)
     m007_auth = start_dt.replace(day=2, hour=11, minute=0)
     m007_cap = start_dt.replace(day=2, hour=11, minute=30)
     events.append([
@@ -153,8 +128,6 @@ def generate_events():
     ])
     event_idx += 1
 
-    # 3. Specific Scenario: M008 - Chargeback ratio > 1% leading to risk grade downgrade
-    # Low volume: 5 captures, then 1 chargeback (20% ratio > 1%)
     for i in range(5):
         txn_idx += 1
         t_id = f"TXN-M008-{i+1:03d}"
@@ -170,7 +143,6 @@ def generate_events():
         ])
         event_idx += 1
 
-    # Chargeback filed on TXN-M008-001 on Day 6
     cb_m008_time = start_dt + timedelta(days=6, hours=12)
     events.append([
         f"EV-{event_idx:04d}", "TXN-M008-001", "M008", "CHARGEBACK", "2500.00",
@@ -178,9 +150,8 @@ def generate_events():
     ])
     event_idx += 1
 
-    # 4. Explicit Edge Case: Capture on day 7 after AUTH (VALID)
     valid_d7_auth = start_dt.replace(day=5, hour=9, minute=0)
-    valid_d7_cap = valid_d7_auth + timedelta(days=7, hours=0)  # exactly 7 days
+    valid_d7_cap = valid_d7_auth + timedelta(days=7, hours=0)
     events.append([
         f"EV-{event_idx:04d}", "TXN-EDGE-D7-VALID", "M001", "AUTH", "3000.00",
         valid_d7_auth.isoformat(), "UPI", ""
@@ -192,10 +163,8 @@ def generate_events():
     ])
     event_idx += 1
 
-    # 5. Explicit Edge Case: Illegal events for Rejection Validation
-    # Capture after 7 days (EXPIRED)
     exp_auth = start_dt.replace(day=1, hour=9, minute=0)
-    exp_cap = exp_auth + timedelta(days=7, hours=1)  # 7 days and 1 hour
+    exp_cap = exp_auth + timedelta(days=7, hours=1)
     events.append([
         f"EV-{event_idx:04d}", "TXN-EDGE-EXPIRED", "M001", "AUTH", "1000.00",
         exp_auth.isoformat(), "UPI", ""
@@ -207,7 +176,6 @@ def generate_events():
     ])
     event_idx += 1
 
-    # Refund before capture (ILLEGAL)
     illegal_auth = start_dt.replace(day=3, hour=10, minute=0)
     illegal_ref = start_dt.replace(day=3, hour=11, minute=0)
     events.append([
@@ -221,7 +189,6 @@ def generate_events():
     ])
     event_idx += 1
 
-    # Sort all events chronologically
     events.sort(key=lambda x: x[5])
 
     filepath = os.path.join(DATA_DIR, "events.csv")

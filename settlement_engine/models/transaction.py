@@ -1,8 +1,3 @@
-"""
-Domain models for Payment Instruments, Transaction Lifecycle, and Events.
-Complies with BR-01, BR-03, BR-05, BR-06, and BR-11.
-"""
-
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
@@ -45,7 +40,7 @@ class LifecycleEvent:
     event_type: EventType
     amount: Decimal
     timestamp: datetime
-    representment_success: Optional[bool] = None  # True if won, False if lost (for REPRESENTMENT events)
+    representment_success: Optional[bool] = None
     notes: Optional[str] = None
 
 
@@ -56,23 +51,19 @@ class Transaction:
     instrument: PaymentInstrument
     authorized_amount: Decimal
     auth_timestamp: datetime
-    
-    # Capture Details
+
     captured_amount: Decimal = Decimal("0.00")
     capture_timestamp: Optional[datetime] = None
-    
-    # Financial MDR Breakdown on Capture
+
     mdr_amount: Decimal = Decimal("0.00")
     gst_amount: Decimal = Decimal("0.00")
-    net_captured_amount: Decimal = Decimal("0.00")  # captured - (mdr + gst)
-    
-    # Refunds and Chargebacks Tracking
+    net_captured_amount: Decimal = Decimal("0.00")
+
     refunded_amount: Decimal = Decimal("0.00")
     has_chargeback: bool = False
     chargeback_fee: Decimal = Decimal("0.00")
     representment_won: Optional[bool] = None
-    
-    # Lifecycle & Settlement status
+
     state: TransactionState = TransactionState.AUTHORIZED
     events: List[LifecycleEvent] = field(default_factory=list)
     is_settled: bool = False
@@ -80,5 +71,4 @@ class Transaction:
 
     @property
     def remaining_refundable_amount(self) -> Decimal:
-        """BR-05: Refund allowed up to captured amount minus prior refunds."""
         return max(Decimal("0.00"), self.captured_amount - self.refunded_amount)

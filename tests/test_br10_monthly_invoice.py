@@ -1,7 +1,3 @@
-"""
-Test Suite for BR-10 (Monthly MDR Invoicing, GST/ITC Rules, and Text Rendering).
-"""
-
 import pytest
 from datetime import datetime, date
 from decimal import Decimal
@@ -12,7 +8,6 @@ from settlement_engine.rules.invoice_generator import InvoiceGenerator
 class TestBR10MonthlyInvoice:
 
     def test_gst_registered_merchant_invoice(self, low_risk_merchant):
-        # Merchant has gstin="27AAACA1234A1Z5"
         captures = [
             Transaction(
                 txn_id="TXN-INV-1",

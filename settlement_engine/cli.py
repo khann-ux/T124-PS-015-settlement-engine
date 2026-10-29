@@ -1,8 +1,3 @@
-"""
-Command-Line Interface and File I/O for the Settlement Engine.
-Handles loading input files, streaming events, running daily batches, and generating reports.
-"""
-
 import csv
 import os
 from datetime import datetime, date, timedelta
@@ -97,7 +92,6 @@ class SettlementCLI:
                 )
                 events.append(ev)
 
-        # Sort chronologically by timestamp
         events.sort(key=lambda e: e.timestamp)
         for ev in events:
             self.engine.process_event(ev)
@@ -105,7 +99,6 @@ class SettlementCLI:
         return count
 
     def run_settlement_range(self, start_date: date, end_date: date) -> int:
-        """Runs daily settlement for every day in the inclusive range."""
         current = start_date
         total_days = 0
         while current <= end_date:
@@ -203,7 +196,6 @@ class SettlementCLI:
                     "YES" if inv.itc_eligible else "NO",
                 ])
 
-                # Individual formatted invoice file
                 inv_filename = f"{inv.invoice_number}.txt"
                 inv_filepath = os.path.join(self.output_dir, "invoices", inv_filename)
                 with open(inv_filepath, mode="w", encoding="utf-8") as inf:

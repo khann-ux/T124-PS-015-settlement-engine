@@ -1,7 +1,3 @@
-"""
-Test Suite for BR-08 (Negative Balances, Carry-Forward, Minimum Payout, and 30-Day Aging).
-"""
-
 import pytest
 from datetime import date, timedelta, datetime
 from decimal import Decimal
@@ -14,10 +10,8 @@ class TestBR08NegativeBalanceAndMinimumPayout:
 
     def test_clearing_negative_balance_with_subsequent_captures(self, low_risk_merchant, calendar):
         settle_day_1 = date(2026, 9, 10)
-        # Day 1: Merchant gets hit with big chargeback, balance becomes -Rs 500
         low_risk_merchant.carried_balance = Decimal("-500.00")
 
-        # Day 2: Merchant captures Rs 2000 on UPI (net = 2000 - 0 = 2000)
         t_capture = Transaction(
             txn_id="TXN-REC-1",
             merchant_id=low_risk_merchant.merchant_id,
@@ -42,8 +36,6 @@ class TestBR08NegativeBalanceAndMinimumPayout:
             calendar=calendar,
         )
 
-        # Pre-settlement = Opening (-500) + Net (2000) = 1500.00
-        # Clears negative balance, pays out Rs 1500.00!
         assert payout_rec.opening_balance == Decimal("-500.00")
         assert payout_rec.calculated_settlement == Decimal("1500.00")
         assert payout_rec.actual_payout == Decimal("1500.00")
@@ -81,7 +73,6 @@ class TestBR08NegativeBalanceAndMinimumPayout:
         assert payout_d1.payout_status == "CARRIED_BELOW_MINIMUM"
         assert low_risk_merchant.carried_balance == Decimal("50.00")
 
-        # Next day: another small capture of Rs 60
         t_small_2 = Transaction(
             txn_id="TXN-SMALL-2",
             merchant_id=low_risk_merchant.merchant_id,
@@ -105,7 +96,6 @@ class TestBR08NegativeBalanceAndMinimumPayout:
             calendar=calendar,
         )
 
-        # 50 opening + 60 = 110 >= 100 -> Settle!
         assert payout_d2.opening_balance == Decimal("50.00")
         assert payout_d2.calculated_settlement == Decimal("110.00")
         assert payout_d2.actual_payout == Decimal("110.00")

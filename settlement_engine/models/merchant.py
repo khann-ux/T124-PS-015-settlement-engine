@@ -1,8 +1,3 @@
-"""
-Domain model representing Merchants and their financial configurations.
-Complies with BR-01, BR-02, BR-04, BR-07, BR-08, BR-09, and BR-10.
-"""
-
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
@@ -16,13 +11,11 @@ class RiskGrade(str, Enum):
     HIGH = "HIGH"
 
     def worsen(self) -> "RiskGrade":
-        """Degrade risk grade by one tier."""
         if self == RiskGrade.LOW:
             return RiskGrade.MEDIUM
         return RiskGrade.HIGH
 
     def recover(self) -> "RiskGrade":
-        """Improve risk grade by one tier."""
         if self == RiskGrade.HIGH:
             return RiskGrade.MEDIUM
         return RiskGrade.LOW
@@ -52,9 +45,8 @@ class Merchant:
     mdr_plan: MDRPlan
     bank_account: BankAccount
     gstin: Optional[str] = None
-    negotiated_rate: Optional[Decimal] = None  # e.g., Decimal("0.0120") for 1.20%
+    negotiated_rate: Optional[Decimal] = None
 
-    # Dynamic settlement state
     carried_balance: Decimal = field(default_factory=lambda: Decimal("0.00"))
     last_payout_date: Optional[date] = None
     pending_since_date: Optional[date] = None
@@ -66,12 +58,6 @@ class Merchant:
 
     @property
     def settlement_cycle_days(self) -> int:
-        """
-        BR-04:
-        LOW -> T+1
-        MEDIUM -> T+2
-        HIGH -> T+3
-        """
         if self.current_risk_grade == RiskGrade.LOW:
             return 1
         elif self.current_risk_grade == RiskGrade.MEDIUM:
@@ -81,12 +67,6 @@ class Merchant:
 
     @property
     def reserve_percentage(self) -> Decimal:
-        """
-        BR-07:
-        HIGH -> 10%
-        MEDIUM -> 5%
-        LOW -> 0%
-        """
         if self.current_risk_grade == RiskGrade.HIGH:
             return Decimal("0.10")
         elif self.current_risk_grade == RiskGrade.MEDIUM:
@@ -95,12 +75,6 @@ class Merchant:
 
     @property
     def reserve_holding_days(self) -> int:
-        """
-        BR-07:
-        HIGH -> 90 days
-        MEDIUM -> 45 days
-        LOW -> 0 days
-        """
         if self.current_risk_grade == RiskGrade.HIGH:
             return 90
         elif self.current_risk_grade == RiskGrade.MEDIUM:
